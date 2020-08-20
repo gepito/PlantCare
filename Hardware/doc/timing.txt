@@ -1,0 +1,19 @@
+- every minute: 
+	measure temperature, moisture, 
+	check water level
+	calculate if water needed
+	log results
+
+- measurement:
+	moisture 3 * 100 ms conditioning, measure 8* (?)
+	pump current
+	if ((pump current) and (no pump activation)) set failure
+	
+- ping watchdog 
+	if (not failure) in every 20 ms
+
+- water dispenser: 
+	if ((water needed) and (water level OK)) for the time volume / flow
+
+- algorythm
+	if (dry time > dry periode) water needed

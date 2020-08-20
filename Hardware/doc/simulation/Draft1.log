@@ -1,0 +1,22 @@
+Circuit: * D:\work\PlantCare\doc\simulation\Draft1.asc
+
+Direct Newton iteration for .op point succeeded.
+Heightened Def Con from 1.01855e-011 to 1.1e-009
+
+Date: Mon Jan 14 23:58:26 2019
+Total elapsed time: 9.126 seconds.
+
+tnom = 27
+temp = 27
+method = modified trap
+totiter = 1387032
+traniter = 1387027
+tranpoints = 385246
+accept = 290595
+rejected = 94652
+matrix size = 33
+fillins = 7
+solver = Normal
+Matrix Compiler1: 1.34 KB object code size  0.8/0.4/[0.2]
+Matrix Compiler2: off  [0.4]/0.7/0.7
+

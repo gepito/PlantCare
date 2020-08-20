@@ -1,0 +1,50 @@
+
+Algorythm
+
+- make reading (temperature, moisture) in every 1 minute (T_MEASUREMENT)
+- wait for 10 readings after power up to first possible irrigation (N_TO_FIRST_IRRIGATION)
+- wait for 10 readings after each irrigation to next possible irrigation (N_TO_NEXT_IRRIGATION)
+- wait for moisture below MOIST_LOW (900) for T_DRYOUT (1-48 hours) reset time at power on
+- shut down -and alert- if moisture drops less than 10% after 3 successive irrigations (water tank empty or pump failure or plumbing failure)
+- don't operate pump during the night (avoid annoying noise if installed in sleeping area)
+
+
+
+-----------------------------------
+Metrics
+
+- pump (2x3 cm black immersion pump) deliver 50 ml @ t = 3 s, h = 20 cm, Vs = 12V, Is = 200 mA
+- ADC reading at 10 bit, 5V Arduino @ d = 10 mm (electrode spacing), D = 1.5 mm (copper electrode diameter), l = 25 mm (penetration depth) is
+	1023 if sandy soil is completly dry
+	500 immediately after 50 ml irrigation of 250 ml soil
+	840 7 hours after 50 ml irrigation of 250 ml soil
+	
+	
+-----------------------------------
+Features:
+
+
+- moisture measurement via AC conductivity
+- temperature measurement by 1 wire thermometer chip (DS1820)
+- water tank empty sensor
+- 555 watchdog with emergency stop
+- logging to SD
+
+----------------------------------
+To consider:
+- some parts of the soil may remain dry even if continously irrigated and standing in stagnant water for hours. So the moisture sensor should be placed in the irrigated region that gets moist after irrigation. Don't worry, your plants will adapt :)
+
+----------------------------------
+Components
+
+https://www.ebay.com/itm/100pcs-Tee-Connectors-For-Irrigation-Hose-Water-Pipe-Joint-Lawn-Watering-System/381699497744?ssPageName=STRK%3AMEBIDX%3AIT&_trksid=p2060353.m2749.l2649
+Tee Connectors For Irrigation Hose Water Pipe Joint Lawn Watering System
+
+https://www.ebay.com/itm/100Pcs-Adjustable-Garden-Irrigation-Mist-Micro-Flow-Dripper-Water-Drip-Head-Hose/253072775216?ssPageName=STRK%3AMEBIDX%3AIT&var=552147026026&_trksid=p2060353.m2749.l2649
+Adjustable Garden Irrigation Mist Micro Flow Dripper Water Drip Head Hose
+
+https://www.ebay.com/itm/DC-5-5V-12V-3W-Submersible-Fountain-Pond-Water-1020-Pump-Aquarium-Fish-Tank/262946676754?hash=item3d38d7e012:g:Tj4AAOSwNkJaOeKi
+DC 5.5V-12V 3W Submersible Fountain Pond Water 1020 Pump Aquarium Fish Tank
+
+for higher volume:
+12V DC 1.2A Micro Submersible Motor Water Pump 5M 14L/Min 840L/H 6-15V Salable

@@ -1,0 +1,14 @@
+ls -1 *.csv|gawk '{print "gawk -f calc-average.awk ", $1 }' >cmdavg 
+chmod u+x cmdavg
+echo "Averages are calculated as"
+cat cmdavg
+
+./cmdavg >averages.txt
+
+gawk '{print "gawk -f calc-deviation.awk ", $0 }' averages.txt >cmdstd
+chmod u+x cmdstd
+echo "Deviations are calculated as"
+cat cmdstd
+
+./cmdstd >deviations.txt
+

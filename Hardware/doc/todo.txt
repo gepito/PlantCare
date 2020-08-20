@@ -1,0 +1,33 @@
+
+- create system design with 
+	multiple (sensor, pump) channels (?)
+	watchdog
+	emergency shutdown
+- install level sensor
+- study power supply alternatives, accumulator charging
+- connect pump, calibrate pump activation periode
+- complete logging with temperature, conductivity, pump activation, date, time, power on
+- define irrigation parameters (max conductivity, dry periode, 
+v- connect SDA, SCL to JP1/9, 10 @ Arduino Leonardo, cut SDA, SCL from A0, A1 of Leonardo @ proto logger shield
+v- r5 wrong position - pull up 1w line @ proto shield
+v- fix D7-D9 of Leonardo @ proto shield
+v- fix A0-A3 of Leonardo @ proto shield
+
+
+
+v- mount DS1820
+- design & care PCB: add FLASH/EEPROM, RTC, temperature sensor, switch, failsafe
+	shield format(?), 1-(4?) channels design
+	atMega/ESP12 controller with WIFI, web server, alert (?)
+v- is there CR 1220 batt. in stock?
+
+v- check supply output voltage
+v- check if dacq board gnd is connected
+v- reposition sensor and FET driver ports (D2, D3 are used for I2C as well)
+v- mount 6 pol header for SPI lines,
+v- cut SDA, SCL from A4, A5 @ dacq board
+v- mount level switch connector @  care PCB A5
+
+
+Schematic:
+v- level sensor to A5 allowing multi level switches at one wire

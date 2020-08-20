@@ -1,0 +1,15 @@
+FUNCTION	LOGGER	Mega32U		ARDUINO		ARDUINO		Comment
+			SHIELD	LEONARDO				  SIM
+
+----- I2C interface ------			
+SCL			A5		PD0			A5, D3					connected at the shield
+SDA			A4		PD1			A4, D2					connected at the shield
+----- SD card interface -----
+MISO		D12		PB3			D12						connected to the ICSP at the shield (which is not necessary)
+MOSI		D11		PB2			D11						-"-
+SCK			D13		PB1			D13						-"-
+SD_CS		D10		PB6									-"-
+
+
+
+

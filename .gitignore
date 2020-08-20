@@ -50,3 +50,18 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# User files
+## input files kept for reference
+i_*
+i_*/
+
+test_*
+test_*/
+*.raw
+
+# EAGLE backup files
+*.s#*
+*.b#*
+
+
