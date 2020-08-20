@@ -1,0 +1,28 @@
+swVersion:  106
+Start at:  20 7 18 7 33 49
+28877910050000E2 CRC is OK!
+-
+swVersion:  106
+Start at:  20 7 18 15 16 50
+28877910050000E2 CRC is OK!
+-
+swVersion:  106
+Start at:  20 7 18 15 18 15
+28877910050000E2 CRC is OK!
+-
+swVersion:  106
+Start at:  20 7 18 15 20 43
+28877910050000E2 CRC is OK!
+-
+swVersion:  106
+Start at:  20 7 18 15 20 56
+28877910050000E2 CRC is OK!
+-
+swVersion:  106
+Start at:  20 7 18 15 31 5
+28877910050000E2 CRC is OK!
+-
+swVersion:  106
+Start at:  20 8 2 16 49 57
+28877910050000E2 CRC is OK!
+-
