@@ -1,5 +1,6 @@
 copper wire sensor: 2 x 1.5 mm dia wires 7 mm apart
 
+20200824 05:00 overpumping, sensor cleaning
 20200815 sensor cleaning
 20200820-08:00 stagnant water, pump detached
 20200820-18:00 measurement saved, sensor cleaned, no water been added
