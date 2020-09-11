@@ -1,5 +1,6 @@
 copper wire sensor: 2 x 1.5 mm dia wires 7 mm apart
 
+20200911 21:05 sensor cleaning
 20200906 08:30 sensor cleaning "moisture" 850 -> 630
 20200830 13:00 preventive sensor cleaning
 20200824 05:00 overpumping, sensor cleaning
