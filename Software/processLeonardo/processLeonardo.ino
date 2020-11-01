@@ -1,28 +1,28 @@
-/* 
+/*
 
-  Plant Care  
-  
+  Plant Care
+
   Control irrigation according to soil moisture conten
   See doc/timing.txt for usage
-  
-  Use with 
+
+  Use with
 	- Arduino Leonardo R3
 	- "Adafruit SMT Datalogger Shield.pdf" - providing SD card interface and RTC
-	- circuit board according to main-wleonardo.pdf - providing pump, level sensor, temperature sensor connectivity 
-	
-	
+	- circuit board according to main-wleonardo.pdf - providing pump, level sensor, temperature sensor connectivity
+
+
   TODO:
 	- implement level sensor check
 	- implement irrigation plausibility: shut down if conductivity is not changing after (eg.) 5 irigations
 	- SD card readout (via serial line) will hang the sketch!
 	- add HC-12 wireless serial support - so serial wire connection is not necessary (?)
 	- is it possible to eliminate RTC and SD, still preserve -some level of- data logging?
-	
-  
-  
+
+
+
 */
 
-#include <OneWire.h> 
+#include "OneWire.h"
 
 #include <SD.h>
 
@@ -32,7 +32,7 @@
 // functions will not work.
 const int chipSelect = 10;
 
-// On the Ethernet Shield, CS is pin 4. 
+// On the Ethernet Shield, CS is pin 4.
 // const int chipSelect = 4;
 
 // I2C bus access
@@ -40,14 +40,14 @@ const int chipSelect = 10;
 #include <Wire.h>
 
 const int RTC = 0x68;
-  
+
 // data logging is done by 5 minutes
 const unsigned int MEASPER = 300;
 
 // the number of 1W temperature sensors in the chain
 const unsigned int nSENSOR = 1;
 
-// the number of minutes to the next irrigation if 
+// the number of minutes to the next irrigation if
 const unsigned int N_TO_NEXT_IRRIGATION = 5;
 
 // moistore below MOIST_LOW consideered dry
@@ -70,10 +70,10 @@ int nDry;               // the number of consecutive dry minutes
 int nPump;              // the total number of irrigations in this run
 
 int sensorValueH, sensorValueL, sensorMoisture = 0;  // variable to store the value coming from the sensor
-int sensorDelay = 100;  
+int sensorDelay = 100;
 
 
-const int owdtaPin = 4;      // IO4: 1 wire data 
+const int owdtaPin = 4;      // IO4: 1 wire data
 
 const int sLen = 20;      // string represantation of timestamp
 
@@ -82,21 +82,21 @@ const int sLen = 20;      // string represantation of timestamp
 // DS18S20 Temperature chip i/o
 OneWire ds(owdtaPin);
 
- 
-  byte i, incomingByte;
-  
-  byte nsensor;  // the actual number of sensors
-  byte type_s;
-  byte data[12];
-  // addresses are stored in contingous array of 8 bytes
-  byte addr[8 * nSENSOR];
-  int rawtemp[nSENSOR]; 
-  // the highest and lowest temperature
-  int tempHi, tempLo;
+
+byte i, incomingByte;
+
+byte nsensor;  // the actual number of sensors
+byte type_s;
+byte data[12];
+// addresses are stored in contingous array of 8 bytes
+byte addr[8 * nSENSOR];
+int rawtemp[nSENSOR];
+// the highest and lowest temperature
+int tempHi, tempLo;
 
 volatile unsigned int activecycles, totalcycles;  // the number of cycles while heater is on (active) and
-                                         // the total number of cycles in current control macro cycle
-                                         // totalcycles is up until PWNMLEN
+// the total number of cycles in current control macro cycle
+// totalcycles is up until PWNMLEN
 
 volatile boolean inDump;    // dump initiated in main loop
 volatile boolean sdOK;   // SD card is available
@@ -112,44 +112,44 @@ String tStamp;
 // get the temperature of n-th sensor
 // n should be within limits [0..nSENSOR-1]
 
-void GetTemp(byte n){
+void GetTemp(byte n) {
 
   int i;
-  
+
   ds.reset();
-  ds.select(addr + 8*n);
+  ds.select(addr + 8 * n);
   ds.write(0x44, 1);        // start conversion, with parasite power on at the end
-  
+
   delay(1000);     // maybe 750ms is enough, maybe not
   // we might do a ds.depower() here, but the reset will take care of it.
-  
+
   ds.reset();
-  ds.select(addr + 8*n);    
+  ds.select(addr + 8 * n);
   ds.write(0xBE);         // Read Scratchpad
 
   for ( i = 0; i < 9; i++) {           // we need 9 bytes
     data[i] = ds.read();
   }
-  
-    // the first ROM byte indicates which chip
+
+  // the first ROM byte indicates which chip
   switch (addr[0]) {
     case 0x10:
-//      Serial.println("  Chip = DS18S20");  // or old DS1820
+      //      Serial.println("  Chip = DS18S20");  // or old DS1820
       type_s = 1;
       break;
     case 0x28:
-//      Serial.println("  Chip = DS18B20");
+      //      Serial.println("  Chip = DS18B20");
       type_s = 0;
       break;
     case 0x22:
-//      Serial.println("  Chip = DS1822");
+      //      Serial.println("  Chip = DS1822");
       type_s = 0;
       break;
     default:
       type_s = 0;
-//      Serial.println("Device is not a DS18x20 family device.");
-  } 
- 
+      //      Serial.println("Device is not a DS18x20 family device.");
+  }
+
 
   int16_t raw = (data[1] << 8) | data[0];
   if (type_s) {
@@ -167,14 +167,14 @@ void GetTemp(byte n){
     //// default is 12 bit resolution, 750 ms conversion time
   }
 
-  rawtemp[n] = raw;  
- 
+  rawtemp[n] = raw;
+
 }
 
 
 
 
-void GetDate(){
+void GetDate() {
 
   Wire.beginTransmission(RTC); // transmit to device #4
   Wire.write(0);        // set address to 0
@@ -188,23 +188,45 @@ void GetDate(){
   rtDay = Wire.read();  // drop day of week data
   rtMonth = Wire.read();
   rtYear = Wire.read();
-  
+
   tStamp = String(rtYear, HEX) + " " + String(rtMonth, HEX) + " " + String(rtDay, HEX)
-      + " " + String(rtHour, HEX) + " " + String(rtMin, HEX) + " " + String(rtSec, HEX);
-  
+           + " " + String(rtHour, HEX) + " " + String(rtMin, HEX) + " " + String(rtSec, HEX);
+
 }
 
 
+/*
+   Dumb SetDate: the date is hardcoded - just for Setup
+   values are BCD format
+*/
 
-void StoreData(){
-  
-  if (sdOK){
+void SetDate() {
+
+  Wire.beginTransmission(RTC); // transmit to device #4
+  Wire.write(0);        // set address to 0
+  Wire.write(0);        // set s to 0
+  Wire.write(0x11);        // set min
+  Wire.write(0x20);        // set hour 24 hour format: bit 6 = 0!
+  Wire.write(0);        // set day of week (just placeholder)
+
+  Wire.write(0x31);        // set day
+  Wire.write(0x10);        // set month
+  Wire.write(0x20);        // set year
+
+  Wire.endTransmission();    // stop transmitting
+
+
+}
+
+void StoreData() {
+
+  if (sdOK) {
 
     sdFile = SD.open("data.txt", FILE_WRITE);
-    
+
     sdFile.print(tStamp);
     sdFile.print('\t');
-    
+
     sdFile.print(nLoop);
     sdFile.print("\t");
     sdFile.print(nDry);
@@ -219,17 +241,17 @@ void StoreData(){
     sdFile.print(sensorMoisture);
     sdFile.print("\t");
 
-    for(int i=0; i < nsensor; i++){
-        sdFile.print((rawtemp[i] & 0xff0) >> 4);
-        sdFile.print(',');
-        sdFile.print(rawtemp[i] & 0xf);
-        sdFile.print("\t");
+    for (int i = 0; i < nsensor; i++) {
+      sdFile.print((rawtemp[i] & 0xff0) >> 4);
+      sdFile.print(',');
+      sdFile.print(rawtemp[i] & 0xf);
+      sdFile.print("\t");
     }
 
     sdFile.println();
     sdFile.close();
   }
-  
+
 }
 
 /*
@@ -238,59 +260,59 @@ void StoreData(){
 
 
 // fill the array of sensor addresses
-void listSensors(){
+void listSensors() {
   byte n;
-  
+
   // iteration count over sensors
   nsensor = 0;
   ds.reset_search();
-  while (ds.search(addr + 8*nsensor)) {
+  while (ds.search(addr + 8 * nsensor)) {
     nsensor++;
   }
-  
+
   Serial.print(nsensor);
   Serial.print(" sensor(s) found.\n");
 
-  for (n=0; n < nsensor; n++){
-     for(i=0; i<8; i++){
-        if (addr[n*8 + i] < 0x10) Serial.print('0');
-        Serial.print(addr[n*8 + i], HEX);      
-     }
-     
-      if (OneWire::crc8(addr+8*n, 7) != addr[8*n+7]) {
-        Serial.print(" CRC is not valid!");
-      }
-      else Serial.print(" CRC is OK!");
-      
-      Serial.print("\n");
-  }   
-  
+  for (n = 0; n < nsensor; n++) {
+    for (i = 0; i < 8; i++) {
+      if (addr[n * 8 + i] < 0x10) Serial.print('0');
+      Serial.print(addr[n * 8 + i], HEX);
+    }
+
+    if (OneWire::crc8(addr + 8 * n, 7) != addr[8 * n + 7]) {
+      Serial.print(" CRC is not valid!");
+    }
+    else Serial.print(" CRC is OK!");
+
+    Serial.print("\n");
+  }
+
   // if SD card is available, write sensor data to startup.txt
-  if (sdOK){
+  if (sdOK) {
     sdFile = SD.open("startup.txt", FILE_WRITE);
-    
+
     sdFile.println(" ");
     sdFile.println(tStamp);
-    
-    for (n=0; n < nsensor; n++){
-       for(i=0; i<8; i++){
-          if (addr[n*8 + i] < 0x10) sdFile.print('0');
-          sdFile.print(addr[n*8 + i], HEX);      
-       }
-       
-        if (OneWire::crc8(addr+8*n, 7) != addr[8*n+7]) {
-          sdFile.print(" CRC is not valid!");
-        }
-        else sdFile.print(" CRC is OK!");
-        
-        sdFile.print("\n");
-    }   
-  
-    
+
+    for (n = 0; n < nsensor; n++) {
+      for (i = 0; i < 8; i++) {
+        if (addr[n * 8 + i] < 0x10) sdFile.print('0');
+        sdFile.print(addr[n * 8 + i], HEX);
+      }
+
+      if (OneWire::crc8(addr + 8 * n, 7) != addr[8 * n + 7]) {
+        sdFile.print(" CRC is not valid!");
+      }
+      else sdFile.print(" CRC is OK!");
+
+      sdFile.print("\n");
+    }
+
+
     sdFile.close();
-    
+
   }
-  
+
 
   Serial.print("\n");
 }
@@ -299,96 +321,96 @@ void listSensors(){
 
 
 // get all temperatures
-void GetTemp(){
+void GetTemp() {
   int i;
-  
-  for(i=0; i < nsensor; i++)
+
+  for (i = 0; i < nsensor; i++)
     GetTemp(i);
   tempLo = rawtemp[0];
   tempHi = rawtemp[0];
-  for(i=1; i < nsensor; i++){
+  for (i = 1; i < nsensor; i++) {
     if (rawtemp[i] > tempHi) tempHi = rawtemp[i];
     if (rawtemp[i] < tempLo) tempLo = rawtemp[i];
   }
-    
+
 }
 
 
 
 
-void printStatus(){
+void printStatus() {
 
   if (sdOK) Serial.print("SD_OK    ");
-    else  Serial.print  ("!!SD_FAIL");
+  else  Serial.print  ("!!SD_FAIL");
   Serial.print("\t");
-  
-// there is no watchdog actually
-//  if (digitalRead(wmonPin) == HIGH) Serial.print("WDen ");
-//    else  Serial.print("WDdis");
-//  Serial.print("\t");
+
+  // there is no watchdog actually
+  //  if (digitalRead(wmonPin) == HIGH) Serial.print("WDen ");
+  //    else  Serial.print("WDdis");
+  //  Serial.print("\t");
 
   Serial.print(tStamp);
   Serial.print('\t');
-    
+
   Serial.print(nLoop);
   Serial.print("\t");
   Serial.print(nDry);
   Serial.print("\t");
   Serial.print(nPump);
   Serial.print(",\t");
-  
+
   Serial.print(sensorMoisture);
   Serial.print("\t");
-    
+
   Serial.print((tempLo & 0xff0) >> 4);
   Serial.print(',');
   Serial.print(tempLo & 0xf);
   Serial.print("\t");
 
   // there is one tempereture sensor only
-//  Serial.print((tempHi & 0xff0) >> 4);
-//  Serial.print(',');
-//  Serial.print(tempHi & 0xf);
-//  Serial.print("\t");
+  //  Serial.print((tempHi & 0xff0) >> 4);
+  //  Serial.print(',');
+  //  Serial.print(tempHi & 0xf);
+  //  Serial.print("\t");
 
   Serial.println();
 }
 
 
-// dump acquired data 
-void dumpData(){
+// dump acquired data
+void dumpData() {
   char c;
-  
-//  Serial.println("*****************************************");
-//  Serial.println("***          startup.txt              ***");
-//  Serial.println("*****************************************");
+
+  //  Serial.println("*****************************************");
+  //  Serial.println("***          startup.txt              ***");
+  //  Serial.println("*****************************************");
   Serial.println("*S");
   sdFile = SD.open("startup.txt", FILE_READ);
-  while (sdFile.available()){
+  while (sdFile.available()) {
     c = sdFile.read();
     Serial.write(c);
   }
-  sdFile.close();  
+  sdFile.close();
 
-//  Serial.println("*****************************************");
-//  Serial.println("***            data.txt               ***");
-//  Serial.println("*****************************************");
+  //  Serial.println("*****************************************");
+  //  Serial.println("***            data.txt               ***");
+  //  Serial.println("*****************************************");
   Serial.println("*D");
   sdFile = SD.open("data.txt", FILE_READ);
-  while (sdFile.available()){
+  while (sdFile.available()) {
     c = sdFile.read();
     Serial.write(c);
   }
-  sdFile.close();  
+  sdFile.close();
 
-//  Serial.println("*****************************************");
-//  Serial.println("***              end                  ***");
-//  Serial.println("*****************************************");
+  //  Serial.println("*****************************************");
+  //  Serial.println("***              end                  ***");
+  //  Serial.println("*****************************************");
   Serial.println("*E");
 
 }
 
-void ToggleLED(){
+void ToggleLED() {
   if (ledon == 0) {
     ledon = 1;
     digitalWrite(ledPin, HIGH);
@@ -396,12 +418,12 @@ void ToggleLED(){
   else {
     ledon = 0;
     digitalWrite(ledPin, LOW);
-  }  
+  }
 }
 
 
-void MeasMoisture(){
-  
+void MeasMoisture() {
+
   digitalWrite(drive1Pin, HIGH);
   digitalWrite(drive2Pin, LOW);
   // stop the program for <sensorValue> milliseconds:
@@ -417,25 +439,25 @@ void MeasMoisture(){
   // read the value from the sensor:
   sensorValueL = analogRead(sensorPin);
   sensorMoisture = sensorValueH - sensorValueL;
-  
+
   // deactivate sensor if out of use
   digitalWrite(drive1Pin, LOW);
   digitalWrite(drive2Pin, LOW);
 
-//  Serial.print("Drive H/L - D : ");
-//  Serial.print(sensorValueH);
-//  Serial.print(" / ");
-//  Serial.print(sensorValueL);
-//  Serial.print(" - ");
-//  Serial.println(sensorMoisture);
+  //  Serial.print("Drive H/L - D : ");
+  //  Serial.print(sensorValueH);
+  //  Serial.print(" / ");
+  //  Serial.print(sensorValueL);
+  //  Serial.print(" - ");
+  //  Serial.println(sensorMoisture);
 
 }
 
-void PumpOn(int t_sec){
+void PumpOn(int t_sec) {
   digitalWrite(pumpPin, HIGH);
-  delay(1000*t_sec);
+  delay(1000 * t_sec);
   digitalWrite(pumpPin, LOW);
-  
+
 }
 
 
@@ -443,6 +465,7 @@ void PumpOn(int t_sec){
 
 void setup()
 {
+
   pinMode(drive1Pin, OUTPUT);
   pinMode(drive2Pin, OUTPUT);
   pinMode(ledPin, OUTPUT);
@@ -460,28 +483,30 @@ void setup()
   nDry = 0;
   nPump = 0;
 
-  Wire.begin();        // join i2c bus (address optional for master) 
-    
+  Wire.begin();        // join i2c bus (address optional for master)
+  // only after comissioning or changing battery
+  // SetDate();
+
   Serial.begin(19200);
-  
-//  Serial.print("Initializing SD card...");
+
+  //  Serial.print("Initializing SD card...");
 
   // make sure that the default chip select pin is set to
   // output, even if you don't use it:
   pinMode(chipSelect, OUTPUT);
-  
+
   // see if the card is present and can be initialized:
   if (!SD.begin(chipSelect)) {
-//    Serial.println("Card failed, or not present");
+    //    Serial.println("Card failed, or not present");
     sdOK = false;
   }
   else {
-//    Serial.println("card initialized."); 
+    //    Serial.println("card initialized.");
     sdOK = true;
   }
-  
-  listSensors();                                                                                                              
-  
+
+  listSensors();
+
 }
 
 
@@ -505,11 +530,11 @@ void loop()
   if (Serial.available()) {
     // read the incoming byte:
     incomingByte = Serial.read();
-    
+
     if (incomingByte == 'D') {
-        inDump = true;
-        dumpData();
-        inDump = false;
+      inDump = true;
+      dumpData();
+      inDump = false;
     }
     else
       Serial.println("?");
@@ -519,19 +544,19 @@ void loop()
   GetTemp();
   MeasMoisture();
 
-  if (thisMin != rtMin){
+  if (thisMin != rtMin) {
     // make certain calculations once in a minute
     thisMin = rtMin;
-    
-    if (nDry > N_TO_NEXT_IRRIGATION){
+
+    if (nDry > N_TO_NEXT_IRRIGATION) {
       PumpOn(PUMP_LENGTH_S);
       nDry = 0;
       nPump++;
     }
-    
-    if (sensorMoisture > MOIST_LOW){
-        // totally dry reads 1023, totally wet ~300
-        // may be confusing to call it moisture as reading is inversly proportional
+
+    if (sensorMoisture > MOIST_LOW) {
+      // totally dry reads 1023, totally wet ~300
+      // may be confusing to call it moisture as reading is inversly proportional
       nDry++;
     }
     else {
@@ -539,14 +564,14 @@ void loop()
     }
 
   }
-  
-  if (sdOK){
+
+  if (sdOK) {
     StoreData();
-  } 
+  }
 
 
   printStatus();
-  delay(1000);  
+  delay(1000);
   nLoop++;
-  
+
 }
