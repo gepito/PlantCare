@@ -15,8 +15,8 @@
 	- implement level sensor check
 	- implement irrigation plausibility: shut down if conductivity is not changing after (eg.) 5 irigations
 	- SD card readout (via serial line) will hang the sketch!
-	- add HC-12 wireless serial support - so serial wire connection is not necessary (?)
-	- is it possible to eliminate RTC and SD, still preserve -some level of- data logging?
+	- add HC-12 wireless serial support - so serial wire connection is not necessary for operation check and dumping data
+	x - is it possible to eliminate RTC and SD, still preserve -some level of- data logging?
 
 
 
@@ -41,6 +41,29 @@ const int chipSelect = 10;
 
 const int RTC = 0x68;
 
+/**********************************************
+* PIN Configuration
+**********************************************/
+
+const int sensorPin = A3;    // select the input pin for the potentiometer
+// drive pins for soil moisture sensor
+
+const int serialRxPin = 0;    // not set explicitly, just indicated here    
+const int serialTxPin = 1;    // not set explicitly, just indicated here
+
+const int owdtaPin = 4;       // IO4: 1 wire data
+const int pumpPin = 5;        // pump driver HIGH : Pump ON
+
+const int sDrive2Pin = 6;     // stagnant sensor low  side
+const int sDrive1Pin = 7;     // stagnant sensor high side
+
+const int drive2Pin = 8;      // moisture sensor low  side
+const int drive1Pin = 9;      // moisture sensor high side
+
+const int ledPin = 13;        // yellow LED to flash on Leonardo board
+
+/**********************************************/
+
 // data logging is done by 5 minutes
 const unsigned int MEASPER = 300;
 
@@ -53,27 +76,18 @@ const unsigned int N_TO_NEXT_IRRIGATION = 5;
 // moistore below MOIST_LOW consideered dry
 const unsigned int MOIST_LOW = 875;
 
-const unsigned int PUMP_LENGTH_S = 7;
-
-int sensorPin = A3;    // select the input pin for the potentiometer
-// drive pins for soil moisture sensor
-int drive1Pin = 8;      // select the pin for the LED
-int drive2Pin = 9;      // select the pin for the LED
-
-int pumpPin = 5;        // pump driver HIGH : Pump ON
-
-int ledPin = 13;        // yellow LED to flash on Leonardo board
+const unsigned int PUMP_LENGTH_S = 15;
 
 int ledon = 1;          // cache LED state
 int nLoop = 0;
 int nDry;               // the number of consecutive dry minutes
 int nPump;              // the total number of irrigations in this run
 
+int commArmed = 0;      // first character of multi byte command received
+int armLen;             // length of armed periode
+
 int sensorValueH, sensorValueL, sensorMoisture = 0;  // variable to store the value coming from the sensor
 int sensorDelay = 100;
-
-
-const int owdtaPin = 4;      // IO4: 1 wire data
 
 const int sLen = 20;      // string represantation of timestamp
 
@@ -205,13 +219,13 @@ void SetDate() {
   Wire.beginTransmission(RTC); // transmit to device #4
   Wire.write(0);        // set address to 0
   Wire.write(0);        // set s to 0
-  Wire.write(0x11);        // set min
-  Wire.write(0x20);        // set hour 24 hour format: bit 6 = 0!
+  Wire.write(0x59);        // set min
+  Wire.write(0x06);        // set hour 24 hour format: bit 6 = 0!
   Wire.write(0);        // set day of week (just placeholder)
 
-  Wire.write(0x31);        // set day
-  Wire.write(0x10);        // set month
-  Wire.write(0x20);        // set year
+  Wire.write(0x01);        // set day
+  Wire.write(0x06);        // set month
+  Wire.write(0x24);        // set year
 
   Wire.endTransmission();    // stop transmitting
 
@@ -270,21 +284,21 @@ void listSensors() {
     nsensor++;
   }
 
-  Serial.print(nsensor);
-  Serial.print(" sensor(s) found.\n");
+  Serial1.print(nsensor);
+  Serial1.println(" sensor(s) found.");
 
   for (n = 0; n < nsensor; n++) {
     for (i = 0; i < 8; i++) {
-      if (addr[n * 8 + i] < 0x10) Serial.print('0');
-      Serial.print(addr[n * 8 + i], HEX);
+      if (addr[n * 8 + i] < 0x10) Serial1.print('0');
+      Serial1.print(addr[n * 8 + i], HEX);
     }
 
     if (OneWire::crc8(addr + 8 * n, 7) != addr[8 * n + 7]) {
-      Serial.print(" CRC is not valid!");
+      Serial1.print(" CRC is not valid!");
     }
-    else Serial.print(" CRC is OK!");
+    else Serial1.print(" CRC is OK!");
 
-    Serial.print("\n");
+    Serial1.println();
   }
 
   // if SD card is available, write sensor data to startup.txt
@@ -314,7 +328,7 @@ void listSensors() {
   }
 
 
-  Serial.print("\n");
+  Serial1.println();
 }
 
 
@@ -336,13 +350,15 @@ void GetTemp() {
 }
 
 
-
+void printHeader1(){
+//                   SD_OK 24 6 1 8 15 35	3665	5	12,	-1023	0,0	
+  Serial1.println("  SD    Y  M D H M  S  loop dry pmp moist temp");
+}
 
 void printStatus() {
 
-  if (sdOK) Serial.print("SD_OK    ");
-  else  Serial.print  ("!!SD_FAIL");
-  Serial.print("\t");
+  if (sdOK) Serial.print("  SD_OK ");
+  else  Serial.print    ("!!NO_SD ");
 
   // there is no watchdog actually
   //  if (digitalRead(wmonPin) == HIGH) Serial.print("WDen ");
@@ -376,37 +392,74 @@ void printStatus() {
   Serial.println();
 }
 
+void printStatus1() {
+
+  if (sdOK) Serial1.print("  SD_OK ");
+  else  Serial1.print    ("!!NO_SD ");
+
+  // there is no watchdog actually
+  //  if (digitalRead(wmonPin) == HIGH) Serial1.print("WDen ");
+  //    else  Serial1.print("WDdis");
+  //  Serial1.print("\t");
+
+  Serial1.print(tStamp);
+  Serial1.print('\t');
+
+  Serial1.print(nLoop);
+  Serial1.print("\t");
+  Serial1.print(nDry);
+  Serial1.print("\t");
+  Serial1.print(nPump);
+  Serial1.print(",\t");
+
+  Serial1.print(sensorMoisture);
+  Serial1.print("\t");
+
+  Serial1.print((tempLo & 0xff0) >> 4);
+  Serial1.print(',');
+  Serial1.print(tempLo & 0xf);
+  Serial1.print("\t");
+
+  // there is one tempereture sensor only
+  //  Serial1.print((tempHi & 0xff0) >> 4);
+  //  Serial1.print(',');
+  //  Serial1.print(tempHi & 0xf);
+  //  Serial1.print("\t");
+
+  Serial1.println();
+}
+
 
 // dump acquired data
 void dumpData() {
   char c;
 
-  //  Serial.println("*****************************************");
-  //  Serial.println("***          startup.txt              ***");
-  //  Serial.println("*****************************************");
-  Serial.println("*S");
+  //  Serial1.println("*****************************************");
+  //  Serial1.println("***          startup.txt              ***");
+  //  Serial1.println("*****************************************");
+  Serial1.println("*S");
   sdFile = SD.open("startup.txt", FILE_READ);
   while (sdFile.available()) {
     c = sdFile.read();
-    Serial.write(c);
+    Serial1.write(c);
   }
   sdFile.close();
 
-  //  Serial.println("*****************************************");
-  //  Serial.println("***            data.txt               ***");
-  //  Serial.println("*****************************************");
-  Serial.println("*D");
+  //  Serial1.println("*****************************************");
+  //  Serial1.println("***            data.txt               ***");
+  //  Serial1.println("*****************************************");
+  Serial1.println("*D");
   sdFile = SD.open("data.txt", FILE_READ);
   while (sdFile.available()) {
     c = sdFile.read();
-    Serial.write(c);
+    Serial1.write(c);
   }
   sdFile.close();
 
-  //  Serial.println("*****************************************");
-  //  Serial.println("***              end                  ***");
-  //  Serial.println("*****************************************");
-  Serial.println("*E");
+  //  Serial1.println("*****************************************");
+  //  Serial1.println("***              end                  ***");
+  //  Serial1.println("*****************************************");
+  Serial1.println("*E");
 
 }
 
@@ -443,23 +496,41 @@ void MeasMoisture() {
   // deactivate sensor if out of use
   digitalWrite(drive1Pin, LOW);
   digitalWrite(drive2Pin, LOW);
-
-  //  Serial.print("Drive H/L - D : ");
-  //  Serial.print(sensorValueH);
-  //  Serial.print(" / ");
-  //  Serial.print(sensorValueL);
-  //  Serial.print(" - ");
-  //  Serial.println(sensorMoisture);
-
+  
+  /*
+    Serial1.print("Drive H/L - D : ");
+    Serial1.print(sensorValueH);
+    Serial1.print(" / ");
+    Serial1.print(sensorValueL);
+    Serial1.print(" - ");
+    Serial1.println(sensorMoisture);
+    Serial1.println();
+  */
 }
 
-void PumpOn(int t_sec) {
+void doPump(int t_sec) {
+
+  Serial1.println("Pump Activated");
   digitalWrite(pumpPin, HIGH);
   delay(1000 * t_sec);
   digitalWrite(pumpPin, LOW);
+  Serial1.println("Pump Off");
 
 }
 
+void doMeasure(void){
+  GetDate();
+  GetTemp();
+  MeasMoisture();
+}
+
+void printHelp() {
+  Serial1.println("PlantCare V1.1");
+  Serial1.println("Commands:");
+  Serial1.println("  AD : dump data log");
+  Serial1.println("  AP : operate pump");
+  Serial1.println("  M  : do measurement");
+}
 
 
 
@@ -468,6 +539,11 @@ void setup()
 
   pinMode(drive1Pin, OUTPUT);
   pinMode(drive2Pin, OUTPUT);
+  
+  /* stagnant sensors not driven actually */
+  pinMode(sDrive1Pin, INPUT);
+  pinMode(sDrive2Pin, INPUT);
+
   pinMode(ledPin, OUTPUT);
   pinMode(pumpPin, OUTPUT);
 
@@ -482,14 +558,16 @@ void setup()
 
   nDry = 0;
   nPump = 0;
+  commArmed = 0;
 
   Wire.begin();        // join i2c bus (address optional for master)
   // only after comissioning or changing battery
   // SetDate();
 
   Serial.begin(19200);
+  Serial1.begin(19200);
 
-  //  Serial.print("Initializing SD card...");
+  Serial1.println("Serial setup...");
 
   // make sure that the default chip select pin is set to
   // output, even if you don't use it:
@@ -506,6 +584,7 @@ void setup()
   }
 
   listSensors();
+  printHelp();
 
 }
 
@@ -519,6 +598,9 @@ void setup()
   - WDLOOP presence toggling
   - temperature measurement (1 s * number of sensors!)
   - 1 sec delay
+
+  - Serial (USB)    : continous monitoring, error messages
+  - Serial1 (D0/D1) : interactive terminal
 */
 
 void loop()
@@ -527,29 +609,54 @@ void loop()
   ToggleLED();
 
   // wait for dump comand
-  if (Serial.available()) {
+  while (Serial1.available()) {
     // read the incoming byte:
-    incomingByte = Serial.read();
+    incomingByte = Serial1.read();
 
-    if (incomingByte == 'D') {
+
+    if (commArmed && (incomingByte == 'D')) {
       inDump = true;
       dumpData();
       inDump = false;
+      commArmed = 0;
+
     }
-    else
-      Serial.println("?");
+    else if (commArmed && (incomingByte == 'P')) {
+      doPump(PUMP_LENGTH_S);
+      nPump++;
+      // mark forced pumping in the log
+      sensorMoisture = 9999;
+      commArmed = 0;
+
+      if (sdOK) {
+        StoreData();
+      }
+    }
+    else if (incomingByte == 'M') {
+      doMeasure();
+      printHeader1();
+      printStatus1();
+      commArmed = 0;
+    }
+    else if (incomingByte == 'A'){
+      commArmed = 1;
+      armLen = 0;
+    }
+    else {
+      printHelp();
+      commArmed = 0;
+    }
+      
   }
 
-  GetDate();
-  GetTemp();
-  MeasMoisture();
-
   if (thisMin != rtMin) {
+
+    doMeasure();
     // make certain calculations once in a minute
     thisMin = rtMin;
 
     if (nDry > N_TO_NEXT_IRRIGATION) {
-      PumpOn(PUMP_LENGTH_S);
+      doPump(PUMP_LENGTH_S);
       nDry = 0;
       nPump++;
     }
@@ -563,15 +670,21 @@ void loop()
       nDry = 0;
     }
 
+    if (sdOK) {
+      StoreData();
+    }
+
+    printStatus();
+    nLoop++;
+
   }
 
-  if (sdOK) {
-    StoreData();
+  delay(100);
+
+  if (commArmed) {
+    armLen++;
+    if (armLen > 8){ 
+      commArmed = 0;}
   }
-
-
-  printStatus();
-  delay(1000);
-  nLoop++;
 
 }

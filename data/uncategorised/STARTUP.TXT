@@ -1,0 +1,234 @@
+swVersion:  SIM-102
+Start at:  19 8 0 0 0 0
+6900000000000000 CRC is not valid!
+-
+swVersion:  103
+Start at:  19 8 7 16 41 1
+-
+swVersion:  103
+Start at:  19 8 7 16 45 48
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 8 7 16 48 16
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 8 7 16 48 53
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 8 7 16 53 53
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 8 7 16 56 25
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 8 7 16 57 22
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 8 7 16 57 54
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 8 7 16 58 8
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 8 7 16 58 12
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 8 7 16 58 34
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 8 7 17 4 7
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 8 7 17 4 33
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 8 7 17 4 36
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 8 7 17 4 38
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 8 7 17 4 38
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 8 7 17 4 59
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 8 7 17 5 54
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 8 7 17 8 30
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 8 7 17 10 54
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 8 7 17 11 8
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 8 7 17 11 38
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 8 7 17 12 12
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 8 7 17 13 51
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 8 7 17 14 3
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 8 7 17 15 42
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 8 14 16 4 12
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 8 14 19 38 7
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 8 17 23 3 11
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 8 22 7 36 18
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 8 22 7 36 19
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 8 22 7 38 43
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 9 16 8 10 37
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 9 19 3 6 11
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 9 19 3 6 57
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 9 19 3 7 53
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 9 19 3 8 42
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 9 19 3 9 11
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  19 11 15 1 2 1
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  0 1 1 0 0 80
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  0 1 1 0 0 80
+28AA7511050000B0 CRC is OK!
+-
+swVersion:  103
+Start at:  0 1 1 0 0 80
+28AA7511050000B0 CRC is OK!
+-
+ 
+
+28AA7511050000B0 CRC is OK!
+ 
+
+28AA7511050000B0 CRC is OK!
+ 
+
+28AA7511050000B0 CRC is OK!
+ 
+
+28AA7511050000B0 CRC is OK!
+ 
+
+28AA7511050000B0 CRC is OK!
+ 
+
+28AA7511050000B0 CRC is OK!
+ 
+
+28AA7511050000B0 CRC is OK!
+ 
+
+28AA7511050000B0 CRC is OK!
+ 
+
+28AA7511050000B0 CRC is OK!
+ 
+
+28AA7511050000B0 CRC is OK!
+ 
+
+28AA7511050000B0 CRC is OK!
+ 
+
+28AA7511050000B0 CRC is OK!
+ 
+
+28AA7511050000B0 CRC is OK!
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+28AA7511050000B0 CRC is OK!
+ 
+
+28AA7511050000B0 CRC is OK!
+ 
+
+28AA7511050000B0 CRC is OK!
+ 
+
+28AA7511050000B0 CRC is OK!
