@@ -14,4 +14,6 @@
     v - set clock
     v - serial output to D0/D1
     v - serial terminal implementation
-    - empty SD card
+    v - empty SD card
+	
+- log each pump event (debug overpumping)	

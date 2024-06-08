@@ -41,6 +41,9 @@ const int chipSelect = 10;
 
 const int RTC = 0x68;
 
+#define SW_ID "PlantCare V1.2"
+
+
 /**********************************************
 * PIN Configuration
 **********************************************/
@@ -74,7 +77,7 @@ const unsigned int nSENSOR = 1;
 const unsigned int N_TO_NEXT_IRRIGATION = 5;
 
 // moistore below MOIST_LOW consideered dry
-const unsigned int MOIST_LOW = 875;
+const unsigned int MOIST_LOW = 675;
 
 const unsigned int PUMP_LENGTH_S = 15;
 
@@ -305,7 +308,9 @@ void listSensors() {
   if (sdOK) {
     sdFile = SD.open("startup.txt", FILE_WRITE);
 
-    sdFile.println(" ");
+    sdFile.println();
+    sdFile.println(SW_ID);
+    GetDate();
     sdFile.println(tStamp);
 
     for (n = 0; n < nsensor; n++) {
@@ -525,11 +530,16 @@ void doMeasure(void){
 }
 
 void printHelp() {
-  Serial1.println("PlantCare V1.1");
+  Serial1.println(SW_ID);
   Serial1.println("Commands:");
-  Serial1.println("  AD : dump data log");
-  Serial1.println("  AP : operate pump");
+  Serial1.println("  A D : dump data log");
+  Serial1.println("  A P : operate pump");
   Serial1.println("  M  : do measurement");
+
+  while (Serial1.available()) {
+    // consume incoming bytes eg. local echo
+    incomingByte = Serial1.read();
+  }
 }
 
 
