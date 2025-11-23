@@ -1,0 +1,12 @@
+copper wire sensor: 2 x 1.5 mm dia wires 7 mm apart
+
+20200927 13:05 sensor cleaning
+20200911 21:05 sensor cleaning
+20200906 08:30 sensor cleaning "moisture" 850 -> 630
+20200830 13:00 preventive sensor cleaning
+20200824 05:00 overpumping, sensor cleaning
+20200815 sensor cleaning
+20200820-08:00 stagnant water, pump detached
+20200820-18:00 measurement saved, sensor cleaned, no water been added
+
+
