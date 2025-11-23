@@ -41,7 +41,7 @@ const int chipSelect = 10;
 
 const int RTC = 0x68;
 
-#define SW_ID "PlantCare V1.2"
+#define SW_ID "PlantCare V1.4-DBG"
 
 
 /**********************************************
@@ -76,7 +76,7 @@ const unsigned int nSENSOR = 1;
 // the number of minutes to the next irrigation if
 const unsigned int N_TO_NEXT_IRRIGATION = 5;
 
-// moistore below MOIST_LOW consideered dry
+// moisture below MOIST_LOW consideered dry
 const unsigned int MOIST_LOW = 675;
 
 const unsigned int PUMP_LENGTH_S = 15;
@@ -121,7 +121,7 @@ volatile boolean sdOK;   // SD card is available
 File sdFile;
 byte rtSec, rtMin, rtHour, rtDay, rtMonth, rtYear;
 byte thisMin;   // store the last minute being recognised
-String tStamp;
+String tStamp, tStamp1;
 
 
 
@@ -371,24 +371,26 @@ void printStatus() {
   //  Serial.print("\t");
 
   Serial.print(tStamp);
-  Serial.print('\t');
+  Serial.print(", ");
+  Serial.print(tStamp1);
 
+  Serial.print(", ");
   Serial.print(nLoop);
-  Serial.print("\t");
+  Serial.print(", ");
   Serial.print(nDry);
-  Serial.print("\t");
+  Serial.print(", ");
   Serial.print(nPump);
-  Serial.print(",\t");
+  Serial.print(", ");
 
   Serial.print(sensorMoisture);
-  Serial.print("\t");
+  Serial.print(", ");
 
   Serial.print((tempLo & 0xff0) >> 4);
-  Serial.print(',');
+  Serial.print(".");
   Serial.print(tempLo & 0xf);
-  Serial.print("\t");
 
   // there is one tempereture sensor only
+  //  Serial.print(", ");
   //  Serial.print((tempHi & 0xff0) >> 4);
   //  Serial.print(',');
   //  Serial.print(tempHi & 0xf);
@@ -399,8 +401,8 @@ void printStatus() {
 
 void printStatus1() {
 
-  if (sdOK) Serial1.print("  SD_OK ");
-  else  Serial1.print    ("!!NO_SD ");
+  if (sdOK) Serial1.print("  SD_OK *");
+  else  Serial1.print    ("!!NO_SD *");
 
   // there is no watchdog actually
   //  if (digitalRead(wmonPin) == HIGH) Serial1.print("WDen ");
@@ -408,30 +410,39 @@ void printStatus1() {
   //  Serial1.print("\t");
 
   Serial1.print(tStamp);
-  Serial1.print('\t');
-
+  Serial1.print(", ");
+  Serial1.print(tStamp1);
+  Serial1.print(", ");
+  
   Serial1.print(nLoop);
-  Serial1.print("\t");
+  Serial1.print(", ");
   Serial1.print(nDry);
-  Serial1.print("\t");
+  Serial1.print(", ");
   Serial1.print(nPump);
-  Serial1.print(",\t");
+  Serial1.print(", ");
 
   Serial1.print(sensorMoisture);
-  Serial1.print("\t");
+  Serial1.print(", ");
 
   Serial1.print((tempLo & 0xff0) >> 4);
-  Serial1.print(',');
+  Serial1.print(".");
   Serial1.print(tempLo & 0xf);
-  Serial1.print("\t");
+  Serial1.print(", ");
 
   // there is one tempereture sensor only
   //  Serial1.print((tempHi & 0xff0) >> 4);
-  //  Serial1.print(',');
+  //  Serial1.print(".");
   //  Serial1.print(tempHi & 0xf);
-  //  Serial1.print("\t");
 
   Serial1.println();
+
+  Serial1.print(nLoop);
+  Serial1.print("thisMin / rtMin: ");
+  Serial1.print(thisMin);
+  Serial1.print(" / ");
+  Serial1.print(rtMin);
+  Serial1.println();
+
 }
 
 
@@ -524,7 +535,6 @@ void doPump(int t_sec) {
 }
 
 void doMeasure(void){
-  GetDate();
   GetTemp();
   MeasMoisture();
 }
@@ -659,8 +669,10 @@ void loop()
       
   }
 
-  if (thisMin != rtMin) {
+  GetDate();
 
+  if (thisMin != rtMin) {
+Serial1.print("a.");
     doMeasure();
     // make certain calculations once in a minute
     thisMin = rtMin;
@@ -670,7 +682,12 @@ void loop()
       nDry = 0;
       nPump++;
     }
+Serial1.print("b.");
 
+    tStamp1 = tStamp;
+    GetDate();
+
+Serial1.print("c.");
     if (sensorMoisture > MOIST_LOW) {
       // totally dry reads 1023, totally wet ~300
       // may be confusing to call it moisture as reading is inversly proportional
@@ -679,12 +696,13 @@ void loop()
     else {
       nDry = 0;
     }
+Serial1.print("d.");
 
     if (sdOK) {
       StoreData();
     }
 
-    printStatus();
+    printStatus1();
     nLoop++;
 
   }
